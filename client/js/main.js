@@ -189,6 +189,8 @@ function main () {
 
 		var searchRuns = 0;
 		var searched = {};
+		var curCallStack = 0;
+		var maxCallStack = 0;
 
 		var spatialSearch = function (index) {
 			searchRuns++;
@@ -205,9 +207,12 @@ function main () {
 				var testIndex = encode(addArr(dirVec, indices[index]));
 
 				if (indices[testIndex]) {
+					curCallStack++;
+					maxCallStack = curCallStack > maxCallStack ? curCallStack : maxCallStack;
 					spatialSearch(testIndex);
 				}
 				else {
+					curCallStack = 0;
 					drawPlane(index, dir);
 				}
 			}
@@ -215,7 +220,7 @@ function main () {
 
 		spatialSearch(nodeindex);
 
-		console.log(searchRuns, _.size(searched));
+		console.log(searchRuns, _.size(searched), maxCallStack);
 
 		var date1 = new Date();
 
