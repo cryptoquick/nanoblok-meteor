@@ -24,7 +24,7 @@ function main () {
 		document.getElementById( 'container' ).innerHTML = "";
 
 	}
-	console.log(worldWidth);
+
 	data = generateHeight( worldWidth, worldDepth );
 	clock = new THREE.Clock();
 	init();
@@ -53,38 +53,38 @@ function main () {
 		var pxGeometry = new THREE.PlaneGeometry( 100, 100 );
 		pxGeometry.faces[ 0 ].materialIndex = 0;
 		// pxGeometry.faces[ 0 ].vertexColors = [ light, shadow, shadow, light ];
-		pxGeometry.applyMatrix( matrix.makeTranslation( vector.set( 50, 0, 0 ) ) );
-		pxGeometry.applyMatrix( matrix.makeRotationY( -Math.PI / 2 ) );
+		pxGeometry.applyMatrix( matrix.makeTranslation( vector.set( 0, 0, 50 ) ) );
+		pxGeometry.applyMatrix( matrix.makeRotationY( Math.PI / 2 ) );
 
 		var nxGeometry = new THREE.PlaneGeometry( 100, 100 );
 		nxGeometry.faces[ 0 ].materialIndex = 1;
 		// nxGeometry.faces[ 0 ].vertexColors = [ light, shadow, shadow, light ];
-		nxGeometry.applyMatrix( matrix.makeTranslation( vector.set( -50, 0, 0 ) ) );
-		nxGeometry.applyMatrix( matrix.makeRotationY( Math.PI / 2 ) );
+		nxGeometry.applyMatrix( matrix.makeTranslation( vector.set( 0, 0, 50 ) ) );
+		nxGeometry.applyMatrix( matrix.makeRotationY( -Math.PI / 2 ) );
 
 		var pyGeometry = new THREE.PlaneGeometry( 100, 100 );
 		pyGeometry.faces[ 0 ].materialIndex = 2;
 		// pyGeometry.faces[ 0 ].vertexColors = [ light, light, light, light ];
-		pyGeometry.applyMatrix( matrix.makeTranslation( vector.set( 0, 50, 0 ) ) );
+		pyGeometry.applyMatrix( matrix.makeTranslation( vector.set( 0, 0, 50 ) ) );
 		pyGeometry.applyMatrix( matrix.makeRotationX( -Math.PI / 2 ) );
 
 		var nyGeometry = new THREE.PlaneGeometry( 100, 100 );
 		nyGeometry.faces[ 0 ].materialIndex = 3;
 		// nyGeometry.faces[ 0 ].vertexColors = [ light, light, light, light ];
-		nyGeometry.applyMatrix( matrix.makeTranslation( vector.set( 0, -50, 0 ) ) );
+		nyGeometry.applyMatrix( matrix.makeTranslation( vector.set( 0, 0, 50 ) ) );
 		nyGeometry.applyMatrix( matrix.makeRotationX( Math.PI / 2 ) );
 
 		var pzGeometry = new THREE.PlaneGeometry( 100, 100 );
 		pzGeometry.faces[ 0 ].materialIndex = 4;
 		// pzGeometry.faces[ 0 ].vertexColors = [ light, shadow, shadow, light ];
 		pzGeometry.applyMatrix( matrix.makeTranslation( vector.set( 0, 0, 50 ) ) );
-		// pzGeometry.applyMatrix( matrix.makeRotationY( Math.PI / 2 ) );
+		pzGeometry.applyMatrix( matrix.makeRotationY( Math.PI ) );
 
 		var nzGeometry = new THREE.PlaneGeometry( 100, 100 );
 		nzGeometry.faces[ 0 ].materialIndex = 5;
 		// nzGeometry.faces[ 0 ].vertexColors = [ light, shadow, shadow, light ];
-		nzGeometry.applyMatrix( matrix.makeTranslation( vector.set( 0, 0, -50 ) ) );
-		nzGeometry.applyMatrix( matrix.makeRotationY( Math.PI ) );
+		nzGeometry.applyMatrix( matrix.makeTranslation( vector.set( 0, 0, 50 ) ) );
+		nzGeometry.applyMatrix( matrix.makeRotationZ( -Math.PI / 2) );
 
 		planes = {
 			'px': pxGeometry,
@@ -115,7 +115,7 @@ function main () {
 		// make index table
 		var date0 = new Date();
 
-		var example = models[0];
+		var example = models[5];
 		var ex = 0;
 		var nodeindex = 0;
 		for (exx = example.length; ex < exx; ex++) {
@@ -146,38 +146,85 @@ function main () {
 		}
 */
 
-		edges = {};
-		runs = 0;
+/*		edges = {};
+		graphRuns = 0;
 		collisions = 0;
+		dirsSearched = 0;
 
 		var spatialGraph = function (index) {
-			runs++;
+			graphRuns++;
 
 			for (var dir in dirs) {
-				var searchDir = dirs[dir];
-				var curIndex = encode(indices[index]);
-				var testIndex = encode(addArr(searchDir, indices[index]));
-
-				// console.log(searchDir, curIndex, testIndex, addArr(dir, indices[index]));
+				searchDir = dirs[dir];
+				curIndex = encode(indices[index]);
+				testIndex = encode(addArr(searchDir, indices[index]));
+				dirsSearched++;
 
 				if (indices[testIndex]) {
 					var edgeIndex = (curIndex * curIndex) * (testIndex * testIndex);
 					if (!edges[edgeIndex]) {
 						edges[edgeIndex] = [curIndex, testIndex];
-						spatialSearch(testIndex);
+						spatialGraph(testIndex);
 					}
 					else {
 						collisions++;
 					}
 				}
-
-				// console.log();
 			}
 		}
 
 		spatialGraph(nodeindex); // use last index added to index table
 
-		console.log(runs, _.size(edges), collisions);
+		console.log(graphRuns, _.size(edges), collisions, dirsSearched);*/
+
+		geometry = new THREE.Geometry();
+		var dummy = new THREE.Mesh();
+
+		var drawPlane = function (index, dir) {
+			var vox = indices[index];
+
+			dummy.position.x = vox[0] * 100;
+			dummy.position.y = vox[1] * 100;
+			dummy.position.z = vox[2] * 100;
+
+			dummy.geometry = planes[dir];
+
+			THREE.GeometryUtils.merge(geometry, dummy);
+		}
+
+		var searchRuns = 0;
+		var searched = {};
+
+		var spatialSearch = function (index) {
+			searchRuns++;
+
+			if (searched[index]) {
+				return;
+			}
+			else {
+				searched[index] = true;
+			}
+
+			for (var dir in dirs) {
+				var dirVec = dirs[dir];
+				var testIndex = encode(addArr(dirVec, indices[index]));
+
+				if (indices[testIndex]) {
+					spatialSearch(testIndex);
+				}
+				else {
+					drawPlane(index, dir);
+				}
+			}
+
+			
+				// dirVec = dirs[dir];
+				// curIndex = encode(indices[index]);
+				// testIndex = encode(addArr(dirVec, indices[index]));
+				// dirsSearched++;
+		}
+
+		spatialSearch(nodeindex);
 
 		var date1 = new Date();
 
@@ -251,6 +298,7 @@ function main () {
 
 		for (var i = 0; i < 6; i++) {
 			mats.push(makeTexturedMaterial('textures/testsq' + i + '.png'));
+			// mats[i].side = THREE.DoubleSide;
 		}
 
 		var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(mats));
