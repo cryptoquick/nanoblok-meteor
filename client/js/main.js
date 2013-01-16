@@ -6,10 +6,6 @@ var camera, controls, scene, renderer;
 
 var mesh, mat;
 
-var worldWidth = 200, worldDepth = 200,
-worldHalfWidth = worldWidth / 2, worldHalfDepth = worldDepth / 2,
-data = [];
-
 var clock;
 
 var stop = false;
@@ -25,7 +21,6 @@ function main () {
 
 	}
 
-	data = generateHeight( worldWidth, worldDepth );
 	clock = new THREE.Clock();
 	init();
 
@@ -115,7 +110,7 @@ function main () {
 		// make index table
 		var date0 = new Date();
 
-		var example = models[5];
+		var example = models[6];
 		var ex = 0;
 		var nodeindex = 0;
 		for (exx = example.length; ex < exx; ex++) {
@@ -216,79 +211,15 @@ function main () {
 					drawPlane(index, dir);
 				}
 			}
-
-			
-				// dirVec = dirs[dir];
-				// curIndex = encode(indices[index]);
-				// testIndex = encode(addArr(dirVec, indices[index]));
-				// dirsSearched++;
 		}
 
 		spatialSearch(nodeindex);
 
+		console.log(searchRuns, _.size(searched));
+
 		var date1 = new Date();
 
 		console.log('search took ' + (date1 - date0) + ' ms to run.');
-
-		// make spatial graph
-	/*	for (var i in indices) {
-			var vn = new VoxNode();
-			vn.data = indices[i];
-			vn.index = i;
-
-			for (var d in dirs) {
-				var dir = dirs[d];
-				var testIndex = encode(addArr(dir, vn.data));
-
-				if (indices[testIndex]) {
-					vn.edges[d] = testIndex;
-				}
-			}
-
-			spatial[i] = vn;
-		}
-
-		// make geometry w/ spatial search
-		geometry = new THREE.Geometry();
-		var dummy = new THREE.Mesh();
-
-		curplanes = {};
-
-		var runonce = 0;
-
-		var searchedEdges = {};
-
-		var spatialSearch = function (node) {
-			for (var pl in planes) {
-				var plane = planes[pl];
-
-				if () {
-
-				}
-			}
-		}
-
-		var drawPlane = function () {
-			var index = spatial[spn].index;
-			var edges = spatial[spn].edges;
-			var vox = indices[index];
-
-			dummy.position.x = vox[0] * 100;
-			dummy.position.y = vox[1] * 100;
-			dummy.position.z = vox[2] * 100;
-
-			dummy.geometry = planes[ed];
-
-			THREE.GeometryUtils.merge(geometry, dummy);
-		}
-
-		for (var spn in spatial) { // spatial node
-			if (runonce > 0) // select only one, any node
-				break;
-			runonce++;
-
-			spatialSearch(spatial[spn]);
-		}*/
 
 		//
 
@@ -329,7 +260,6 @@ function main () {
 		//
 
 		window.addEventListener( 'resize', onWindowResize, false );
-
 	}
 }
 
@@ -343,45 +273,6 @@ function onWindowResize() {
 	render();
 
 	// controls.handleResize();
-
-}
-
-function loadTexture( path, callback ) {
-
-	var image = new Image();
-
-	image.onload = function () { callback(); };
-	image.src = path;
-
-	return image;
-
-}
-
-function generateHeight( width, height ) {
-
-	var data = [], perlin = new ImprovedNoise(),
-	size = width * height, quality = 2, z = Math.random() * 100;
-
-	for ( var j = 0; j < 4; j ++ ) {
-
-		if ( j == 0 ) for ( var i = 0; i < size; i ++ ) data[ i ] = 0;
-
-		for ( var i = 0; i < size; i ++ ) {
-
-			var x = i % width, y = ( i / width ) | 0;
-			data[ i ] += perlin.noise( x / quality, y / quality, z ) * quality;
-
-		}
-
-		quality *= 4
-
-	}
-	return data;
-}
-
-function getY( x, z ) {
-
-	return ( data[ x + z * worldWidth ] * 0.2 ) | 0;
 
 }
 
