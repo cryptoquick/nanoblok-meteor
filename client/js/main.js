@@ -2,15 +2,18 @@ var fogExp2 = true;
 
 var container, stats;
 
-var camera, controls, scene, renderer;
+var camera, controls, scene, renderer, projector;
 
 var mesh, mat;
 
 var clock;
 
+var mouse = { x: -2.0, y: -2.0 }, INTERSECTED;
+
 var stop = false;
 
 var indices = {},
+	faceIndices = [],
 	spatial = {};
 
 function main () {
@@ -32,7 +35,7 @@ function main () {
 		camera.position.z = 2500;
 
 		controls = new THREE.OrbitControls( camera );
-		controls.addEventListener( 'change', render );
+		// controls.addEventListener( 'change', render );
 
 		scene = new THREE.Scene();
 		// scene.fog = new THREE.FogExp2( 0xffffff, 0.00015 );
@@ -110,7 +113,7 @@ function main () {
 		// make index table
 		var date0 = new Date();
 
-		var example = models[6];
+		var example = models[5];
 		var ex = 0;
 		var nodeindex = 0;
 		for (exx = example.length; ex < exx; ex++) {
@@ -185,6 +188,8 @@ function main () {
 			dummy.geometry = planes[dir];
 
 			THREE.GeometryUtils.merge(geometry, dummy);
+
+
 		}
 
 		var searchRuns = 0;
@@ -196,6 +201,7 @@ function main () {
 			searchRuns++;
 
 			if (searched[index]) {
+				curCallStack = 0;
 				return;
 			}
 			else {
@@ -210,6 +216,10 @@ function main () {
 					curCallStack++;
 					maxCallStack = curCallStack > maxCallStack ? curCallStack : maxCallStack;
 					spatialSearch(testIndex);
+
+					// add two faces, 1 plane -> 2 tris
+					faceIndices.push(testIndex);
+					faceIndices.push(testIndex);
 				}
 				else {
 					curCallStack = 0;
@@ -220,7 +230,7 @@ function main () {
 
 		spatialSearch(nodeindex);
 
-		console.log(searchRuns, _.size(searched), maxCallStack);
+		console.log('searches run:', searchRuns, 'number of voxels searched:', _.size(searched), 'max call stack:', maxCallStack);
 
 		var date1 = new Date();
 
@@ -250,6 +260,8 @@ function main () {
 		directionalLight.position.set( 1, 1, 0.5 ).normalize();
 		scene.add( directionalLight );
 
+		projector = new THREE.Projector();
+
 		renderer = new THREE.WebGLRenderer( { clearColor: 0xffffff } );
 		renderer.setSize( window.innerWidth, window.innerHeight );
 
@@ -262,8 +274,8 @@ function main () {
 		stats.domElement.style.top = '0px';
 		container.appendChild( stats.domElement );
 
-		//
-
+		// events
+		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 		window.addEventListener( 'resize', onWindowResize, false );
 	}
 }
@@ -276,14 +288,20 @@ function onWindowResize() {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
 	render();
+}
 
-	// controls.handleResize();
+function onDocumentMouseMove( event ) {
+	event.preventDefault();
 
+	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
 
 function animate() {
 	if (stop)
 		return;
+
+	render();
 
 	stats.update();
 	controls.update();
@@ -292,9 +310,20 @@ function animate() {
 }
 
 function render() {
+	// find intersections
+	var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+	projector.unprojectVector( vector, camera );
+	var raycaster = new THREE.Raycaster( camera.position, vector.subSelf( camera.position ).normalize() );
+	var intersects = raycaster.intersectObjects( scene.children );
+
+	if ( intersects.length > 0 ) {
+		var voxInfo = indices[faceIndices[intersects[0].faceIndex]];
+		console.log('faceIndex:', intersects[0].faceIndex, 'x:', voxInfo[0], 'y:', voxInfo[1], 'z:', voxInfo[2], 'color:', voxInfo[3]);
+	} else {
+		// no intersection
+	}
 
 	renderer.render( scene, camera );
-
 }
 
 $(window).bind('load', function () {
