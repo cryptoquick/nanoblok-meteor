@@ -16,10 +16,12 @@
 	// compute a worst-case
 	var size = 20;
 	var worstCase = [];
+	var c = 0;
 	for (var x = 0; x < size; x++) {
 		for (var y = 0; y < size; y++) {
 			for (var z = 0; z < size; z++) {
-				worstCase.push([x, y, z, 0]);
+				worstCase.push([x, y, z, c]);
+				c++;
 			}
 		}
 	}

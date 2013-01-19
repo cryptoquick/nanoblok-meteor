@@ -1,0 +1,44 @@
+application: blokedit
+version: 0-0-1-dev
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+default_expiration: "7d"
+
+builtins:
+- deferred: on
+# - appstats: on
+
+inbound_services:
+- warmup
+
+libraries:
+- name: webapp2
+  version: "2.5.1"
+
+handlers:
+- url: /favicon\.ico
+  static_files: client/img/favicon.ico
+  upload: client/img/favicon\.ico
+
+- url: /robots\.txt
+  static_files: client/robots.txt
+  upload: client/robots\.txt
+
+# - url: /js/
+#   static_dir: client/js
+#   expiration: "0d 0h 0s"
+
+- url: /styles/
+  static_dir: client/styles
+
+# - url: /tpl/
+#   static_dir: client/tpl
+
+- url: /plse/*
+  script: server.plse.get
+
+- url: /
+  static_files: client/index.html
+  upload: index\.html
