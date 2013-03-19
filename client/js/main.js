@@ -232,23 +232,23 @@ function main () {
 
 		camera.lookAt(THREE.GeometryUtils.center(geometry));
 
-		// var mats = [];
+		var mats = [];
 
-		/*for (var i = 0; i < 6; i++) {
+		for (var i = 0; i < 6; i++) {
 			mats.push(makeTexturedMaterial('textures/testsq' + i + '.png'));
 			// mats[i].side = THREE.DoubleSide;
-		}*/
+		}
 
-		var texture = new THREE.Texture(colortex);
-		console.log(texture);
+		// var texture = new THREE.Texture(colortex);
+		// console.log(texture);
 		// var colormat = new THREE.MeshBasicMaterial({ map: texture });
-		var material = new THREE.MeshLambertMaterial( { map: texture, ambient: 0xbbbbbb, vertexColors: THREE.VertexColors } );
+		// var material = new THREE.MeshLambertMaterial( { map: texture, ambient: 0xbbbbbb, vertexColors: THREE.VertexColors } );
 
 		geometry.computeFaceNormals();
 		geometry.faceVertexUvs[0] = uvs;
 		geometry.uvsNeedUpdate = true;
 
-		var mesh = new THREE.Mesh(geometry, material);
+		var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial());
 		console.log(mesh);
 
 		rotateAroundWorldAxis(mesh, new THREE.Vector3(-1,0,0), Math.PI / 2);
@@ -280,7 +280,7 @@ function main () {
 		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 		window.addEventListener( 'resize', onWindowResize, false );
 
-		requestAnimationFrame(animate);
+		// renderAfterTexturesLoaded(animate);
 	}
 }
 
@@ -347,9 +347,9 @@ function stahp (i) {
 	stop = true;
 }
 
-/*var renderAfterTexturesLoaded = _.after(6, function () {
+var renderAfterTexturesLoaded = _.after(6, function () {
 	requestAnimationFrame(animate);
-});*/
+});
 
 function makeTexturedMaterial (textureFile) {
 	var texture = THREE.ImageUtils.loadTexture( textureFile, {}, function () {
