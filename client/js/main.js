@@ -14,14 +14,14 @@ var stop = false;
 
 var indices = {},
 	faceIndices = [],
-	spatial = {},
-	colors = [],
-	uvs = [];
+	spatial = {};
 
 function main () {
-	if (!Detector.webgl) {
+	if ( ! Detector.webgl ) {
+
 		Detector.addGetWebGLMessage();
-		document.getElementById('nb').innerHTML = "";
+		document.getElementById( 'container' ).innerHTML = "";
+
 	}
 
 	clock = new THREE.Clock();
@@ -110,22 +110,18 @@ function main () {
 			return arr3;
 		}
 
-		// make color swatch index
-		colors = generateColors();
-		var colortex = document.createElement('canvas');
-		colortex.width = colortex.height = 256;
-		var ctx = colortex.getContext('2d');
-
 		// make index table
 		var date0 = new Date();
 
-		var example = models[1];
+		var example = models[5];
 		var ex = 0;
 		var nodeindex = 0;
 		for (exx = example.length; ex < exx; ex++) {
 			nodeindex = encode(example[ex]);
 			indices[nodeindex] = example[ex];
 		}
+
+		// indices['size'] = ex;
 
 		var dirs = {
 			'px': [ 1, 0, 0],
@@ -136,20 +132,54 @@ function main () {
 			'nz': [ 0, 0,-1]
 		};
 
+/*		var dirs = {
+			'x': [[ 1, 0, 0], [-1, 0, 0]],
+			'y': [[ 0, 1, 0], [ 0,-1, 0]],
+			'z': [[ 0, 0, 1], [ 0, 0,-1]],
+		}*/
+/*
+		var VoxNode = function () {
+			this.edges = {};
+			this.index = 0;
+		}
+*/
+
+/*		edges = {};
+		graphRuns = 0;
+		collisions = 0;
+		dirsSearched = 0;
+
+		var spatialGraph = function (index) {
+			graphRuns++;
+
+			for (var dir in dirs) {
+				searchDir = dirs[dir];
+				curIndex = encode(indices[index]);
+				testIndex = encode(addArr(searchDir, indices[index]));
+				dirsSearched++;
+
+				if (indices[testIndex]) {
+					var edgeIndex = (curIndex * curIndex) * (testIndex * testIndex);
+					if (!edges[edgeIndex]) {
+						edges[edgeIndex] = [curIndex, testIndex];
+						spatialGraph(testIndex);
+					}
+					else {
+						collisions++;
+					}
+				}
+			}
+		}
+
+		spatialGraph(nodeindex); // use last index added to index table
+
+		console.log(graphRuns, _.size(edges), collisions, dirsSearched);*/
+
 		geometry = new THREE.Geometry();
-		dummy = new THREE.Mesh();
-		var texsize = 256;
+		var dummy = new THREE.Mesh();
 
 		var drawPlane = function (index, dir) {
 			var vox = indices[index];
-
-			// make texture
-			var color = colors[vox[3]],
-				cx = index % texsize / 2,
-				cy = index / texsize | 0;
-			// console.log(index, cx, cy);
-			ctx.fillStyle = 'rgba(' + color[0] + ',' + color[1] + ',' + color[2] + ', 1.0)';
-			ctx.fillRect(127 + cx, cy, 1, 1);
 
 			dummy.position.x = vox[0] * 100;
 			dummy.position.y = vox[1] * 100;
@@ -157,30 +187,9 @@ function main () {
 
 			dummy.geometry = planes[dir];
 
-			var pxsize = 1 / texsize, // uv pixel size
-				uvoffsx = cx / texsize, // uv offset x/y
-				uvoffsy = cy / texsize;
-
-			uvs.push([
-				new THREE.Vector2(uvoffsx, uvoffsy + pxsize),
-				new THREE.Vector2(uvoffsx, uvoffsy),
-				new THREE.Vector2(uvoffsx + pxsize, uvoffsy),
-				new THREE.Vector2(uvoffsx + pxsize, uvoffsx + pxsize)
-			]); // uvs
-
-		//	dummy.geometry.verticesNeedUpdate = true;
-		//	dummy.geometry.elementsNeedUpdate = true;
-		//	dummy.geometry.morphTargetsNeedUpdate = true;
-		//	dummy.geometry.uvsNeedUpdate = true;
-		//	dummy.geometry.normalsNeedUpdate = true;
-		//	dummy.geometry.colorsNeedUpdate = true;
-		//	dummy.geometry.tangentsNeedUpdate = true;
-
-			// add two faceindices for interaction, 1 plane -> 2 tris
-			faceIndices.push(index);
-			// faceIndices.push(index);
-
 			THREE.GeometryUtils.merge(geometry, dummy);
+
+
 		}
 
 		var searchRuns = 0;
@@ -204,12 +213,13 @@ function main () {
 				var testIndex = encode(addArr(dirVec, indices[index]));
 
 				if (indices[testIndex]) {
-					// for debugging purposes, we'd like to know how far down our recursion goes
 					curCallStack++;
 					maxCallStack = curCallStack > maxCallStack ? curCallStack : maxCallStack;
-
-					// go on to search others
 					spatialSearch(testIndex);
+
+					// add two faces, 1 plane -> 2 tris
+					faceIndices.push(testIndex);
+					faceIndices.push(testIndex);
 				}
 				else {
 					curCallStack = 0;
@@ -219,8 +229,6 @@ function main () {
 		}
 
 		spatialSearch(nodeindex);
-
-		// $('#nb').before(colortex); // texture testing
 
 		console.log('searches run:', searchRuns, 'number of voxels searched:', _.size(searched), 'max call stack:', maxCallStack);
 
@@ -232,24 +240,14 @@ function main () {
 
 		camera.lookAt(THREE.GeometryUtils.center(geometry));
 
-		// var mats = [];
+		var mats = [];
 
-		/*for (var i = 0; i < 6; i++) {
+		for (var i = 0; i < 6; i++) {
 			mats.push(makeTexturedMaterial('textures/testsq' + i + '.png'));
 			// mats[i].side = THREE.DoubleSide;
-		}*/
+		}
 
-		var texture = new THREE.Texture(colortex);
-		console.log(texture);
-		// var colormat = new THREE.MeshBasicMaterial({ map: texture });
-		var material = new THREE.MeshLambertMaterial( { map: texture, ambient: 0xbbbbbb, vertexColors: THREE.VertexColors } );
-
-		geometry.computeFaceNormals();
-		geometry.faceVertexUvs[0] = uvs;
-		geometry.uvsNeedUpdate = true;
-
-		var mesh = new THREE.Mesh(geometry, material);
-		console.log(mesh);
+		var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(mats));
 
 		rotateAroundWorldAxis(mesh, new THREE.Vector3(-1,0,0), Math.PI / 2);
 
@@ -279,8 +277,6 @@ function main () {
 		// events
 		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 		window.addEventListener( 'resize', onWindowResize, false );
-
-		requestAnimationFrame(animate);
 	}
 }
 
@@ -322,7 +318,7 @@ function render() {
 
 	if ( intersects.length > 0 ) {
 		var voxInfo = indices[faceIndices[intersects[0].faceIndex]];
-		console.log('faceIndex:', intersects[0].faceIndex, 'x:', voxInfo[0], 'y:', voxInfo[1], 'z:', voxInfo[2], 'color:', voxInfo[3], intersects[0]);
+		console.log('faceIndex:', intersects[0].faceIndex, 'x:', voxInfo[0], 'y:', voxInfo[1], 'z:', voxInfo[2], 'color:', voxInfo[3]);
 	} else {
 		// no intersection
 	}
@@ -347,9 +343,9 @@ function stahp (i) {
 	stop = true;
 }
 
-/*var renderAfterTexturesLoaded = _.after(6, function () {
+var renderAfterTexturesLoaded = _.after(6, function () {
 	requestAnimationFrame(animate);
-});*/
+});
 
 function makeTexturedMaterial (textureFile) {
 	var texture = THREE.ImageUtils.loadTexture( textureFile, {}, function () {
@@ -358,7 +354,7 @@ function makeTexturedMaterial (textureFile) {
 		texture.magFilter = THREE.NearestFilter;
 		texture.minFilter = THREE.LinearMipMapLinearFilter;
 
-	var material = new THREE.MeshLambertMaterial( { map: texture, ambient: 0xbbbbbb } ); // , vertexColors: THREE.VertexColors
+	var material = new THREE.MeshLambertMaterial( { map: texture, ambient: 0xbbbbbb, vertexColors: THREE.VertexColors } );
 
 	return material;
 }
@@ -372,25 +368,3 @@ function rotateAroundWorldAxis( object, axis, radians ) {
 	object.matrix = rotationMatrix;
 	object.rotation.setEulerFromRotationMatrix( object.matrix );
 }
-
-function generateColors () {
-	var swatch = [],
-		color = [],
-		x = 0, y = 0, z = 0;
-	
-	for (z = 0; z < 32; z++) {
-		for (y = 0; y < 32; y++) {
-			for (x = 31; x >= 0; x--) {
-				color = [
-					(z + 1) * 8,
-					(y + 1) * 8,
-					256 - (x + 1) * 8
-				];
-				
-				swatch.push(color);
-			}
-		}
-	}
-
-	return swatch;
-};
